@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<unistd.h>
 
-void main()
+int main()
 {
 	
 	int i = 0;
@@ -9,6 +9,8 @@ void main()
 		printf("%d ",i);
 		sleep(1);
 		i++;
+		fflush(stdout);
 
 	}
+	return 0;
 }
