@@ -20,7 +20,7 @@ typedef struct MemoryRegion
 void sighandler();
 void write_context_to_ckpt_header();
 long unsigned hex2int(char *);
-ucontext_t* ucp;
+ucontext_t* cp;
 MemoryRegion mr;
 int flag = 0;
 
@@ -84,9 +84,9 @@ void write_context_to_ckpt_header(){
     }
     
    
-    ucontext_t* ucp = malloc(sizeof(ucontext_t));
-	int r = getcontext(ucp);
-	if(r ==-1)
+    ucontext_t* cp = malloc(sizeof(ucontext_t));
+	int getcontext_success = getcontext(cp);
+	if(getcontext_success ==-1)
 	{	
 		printf("getContext failed");
 		exit(1);
@@ -96,7 +96,7 @@ void write_context_to_ckpt_header(){
 	}
 	flag++;
 	
-	write(fp,(void *)ucp,(size_t)sizeof(ucontext_t));
+	write(fp,(void *)cp,(size_t)sizeof(ucontext_t));
 
 	if (fptr == NULL)
     {
@@ -138,7 +138,7 @@ void write_context_to_ckpt_header(){
 			   	  			}
 		   	  			}
 
-		   	  if(n==7){
+		   	  	if(n==7){
 		   	  	break;
 		   	  }
 
@@ -149,11 +149,13 @@ void write_context_to_ckpt_header(){
 		
 
 		if(strstr(token, "[vsyscall]") != NULL){
-			printf("Found Match!!!!\n");
+			
 			break;
 		}
 
-		if (mr.isReadable == 1 ) {
+		// Write to checkpoint image only those can be read this avoids BAD ADDRESS error 14
+
+		if (mr.isReadable == 1) {
 					
 		    if (write(fp,&mr, sizeof(mr)) < 0){
 		    	printf("MemoryRegion writing error\n");
@@ -177,7 +179,6 @@ void write_context_to_ckpt_header(){
 
 void sighandler()
 {
-   printf("Caught signal coming out...\n");
    write_context_to_ckpt_header();
      
 }
@@ -185,7 +186,6 @@ void sighandler()
 __attribute__ ((constructor))
 static void myconstructor()
 {	
-	printf("DMTCP loaded...\n");
 	signal(SIGUSR2, sighandler);
 }
 

@@ -28,10 +28,11 @@ restart: restart.c
 
 res: 	restart
 	./restart ckpt
-
 	
 clean:
 	rm myprog.o ckpt.o libckpt.so ckpt myprog restart
+
+build:	libckpt.so restart myprog
 
 dist:
 	dir=`basename $$PWD`; cd ..; tar cvf $$dir.tar ./$$dir; gzip $$dir.tar	

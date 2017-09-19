@@ -1,0 +1,8 @@
+1 Create checkpoint image
+make -s check
+
+2 Restore the created image
+make -s res
+
+3 Clean the images
+make clean
