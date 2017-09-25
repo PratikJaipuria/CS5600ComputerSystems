@@ -18,17 +18,16 @@ typedef struct MemoryRegion
 	} MemoryRegion;
 
 void sighandler();
+
 void write_context_to_ckpt_header();
 long unsigned hex2int(char *);
 ucontext_t* cp;
 MemoryRegion mr;
 int flag = 0;
 
-long unsigned hex2int(char *str) {
-  
+long unsigned hex2int(char *str) {  
    unsigned long intVal = 0;
-   int i = 0;
-   
+   int i = 0;   
    while(1){
    	 switch(str[i]){
    	 	case 'a':
@@ -50,76 +49,57 @@ long unsigned hex2int(char *str) {
    	 		intVal += 15;	   	 		
    	 		break;		
    	 	default:
-   	 		intVal += (int)str[i] - 48;	
-   	 		
-   	 }
- 	 
+   	 		intVal += (int)str[i] - 48;   	 		
+   	 } 	 
    	 i++;
    	 if(str[i] == '\0'){
    	 	break;
    	 }
    	 intVal = intVal << 4;
    }
-	return intVal;
-   
+	return intVal;   
 }
 
 
 void write_context_to_ckpt_header(){
-
 	FILE *fptr;
 	int fp;
 	char * line = NULL;
     size_t len = 0;
   	const char s[2] = " ";
-    char *token;
-    
+    char *token;    
 	fptr = fopen("/proc/self/maps", "r");
-
 	fp = open("ckpt",O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
-	if (fp == -1)
-	{	
+	if (fp == -1){	
 		printf("open failed, read errno = %d\n", errno);
-		exit(1);
-    }
-    
-   
+		exit(1);	
+    }  
     ucontext_t* cp = malloc(sizeof(ucontext_t));
 	int getcontext_success = getcontext(cp);
-	if(getcontext_success ==-1)
-	{	
+	if(getcontext_success ==-1)	{	
 		printf("getContext failed");
 		exit(1);
 	}
 	if(flag==1){
 	 return;
 	}
-	flag++;
-	
+	flag++;	
 	write(fp,(void *)cp,(size_t)sizeof(ucontext_t));
-
 	if (fptr == NULL)
-    {
-        printf("Cannot open file \n");
+    {   printf("Cannot open file \n");
         exit(EXIT_FAILURE);
     }
-
     while (getline(&line, &len, fptr) != -1) {
         int n = 1;
-        token = strtok(line, "-");
-    	    
+        token = strtok(line, "-");    	    
 	    while( token != NULL ) 
-		   {
-		  
-		   	  if(n==1){
+		   {  if(n==1){
 		   	  	mr.startAddr = (void *)hex2int(token);	
-		  
-		   	  }
+		  		}
 		   	  if(n==2){
 		   	  	mr.endAddr = (void *)hex2int(token);	
-		   	  }
-		   	  if(n==3){
-				   	  		if(token[0] == 'r'){
+		   	  	}
+		   	  if(n==3){		if(token[0] == 'r'){
 				   	  			mr.isReadable = 1;
 				   	  		}else{
 				   	  			mr.isReadable = 0;
@@ -137,40 +117,24 @@ void write_context_to_ckpt_header(){
 				   	  			mr.isExecutabl = 0;
 			   	  			}
 		   	  			}
-
 		   	  	if(n==7){
 		   	  	break;
 		   	  }
-
 		   	  n++;
 		   	  token = strtok(NULL, s);
-
 		   }
-		
-
 		if(strstr(token, "[vsyscall]") != NULL){
-			
-			break;
-		}
-
-		// Write to checkpoint image only those can be read this avoids BAD ADDRESS error 14
-
+			break;}
 		if (mr.isReadable == 1) {
-					
 		    if (write(fp,&mr, sizeof(mr)) < 0){
 		    	printf("MemoryRegion writing error\n");
-		    }
-		
+		    }		
 		    int writes = write(fp ,mr.startAddr,mr.endAddr - mr.startAddr);
 		    if ( writes == -1 )
-			{
-  	    			printf("Error in Data Writing with error %d\n" , errno);
+			{  printf("Error in Data Writing with error %d\n" , errno);
 			}
-
 		}
-	
-	}
-   
+	}   
     if (line)
         free(line);
     fclose(fptr);
