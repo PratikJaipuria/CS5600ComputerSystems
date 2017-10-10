@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #define HEAP_SIZE 1
-
+#define CHUNK_SIZE 10
 
 // global declaration of mutex 
 pthread_mutex_t global_malloc_lock;
